@@ -3,7 +3,7 @@ hasqap
 
 This project is a loose vala-implementation of the HAS-QAP algorithm as presented in the following paper:
 
-ftp://ftp.idsia.ch/pub/luca/papers/tr-idsia-4-97.pdf
+<ftp://ftp.idsia.ch/pub/luca/papers/tr-idsia-4-97.pdf>
 
 It's intended use was to optimize keyboard layouts as this is a problem which can (more or less) been formulated as a quadratic assignment problem..
 
