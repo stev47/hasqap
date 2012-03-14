@@ -1,0 +1,40 @@
+# Vala library building
+# =====================
+#
+# This builds a vala library foo out of all the vala files in the
+# current directory. It is assumed, that all vala files depend on each
+# other. Generated files for library foo are foo.vapi, foo.h and foo.a.
+#
+#
+# Configuration
+# =============
+
+# Library name (affects outputs generated)
+lib = hasqap
+
+CFLAGS += -O5
+
+# =================
+# End Configuration
+
+include_rules
+
+# Generate fast-vapis (not dependent on other files)
+: foreach *.vala |> !vapi |> {fastvapi}
+
+# Compile each vala file to C with fast-vapi-dependencies
+: foreach *.vala | {fastvapi} |> !vcdeps |> {cfiles}
+
+# Generate library-vapi and c-header file (the .h-file is also created!)
+: {fastvapi} |> !vlib |> $(lib).vapi
+
+# Create object files
+: foreach {cfiles} |> !cc |> {objfiles}
+
+# Create library (archive)
+: {objfiles} |> !ar |> $(lib).a
+
+
+# Linking executable
+: {objfiles} |> !ld |> solver
+

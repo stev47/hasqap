@@ -1,0 +1,43 @@
+.gitignore
+
+# Flags for libraries that will be needed when building the binary.
+# gobject-2.0 includes glib-2.0
+
+package = gobject-2.0
+VALAPKGS += --pkg $(package)
+CFLAGS += `pkg-config --cflags $(package)`
+LDFLAGS += `pkg-config --libs $(package)`
+
+package = gee-1.0
+VALAPKGS += --pkg $(package)
+CFLAGS += `pkg-config --cflags $(package)`
+LDFLAGS += `pkg-config --libs $(package)`
+
+package = gio-2.0
+VALAPKGS += --pkg $(package)
+CFLAGS += `pkg-config --cflags $(package)`
+LDFLAGS += `pkg-config --libs $(package)`
+
+LDFLAGS += -lm
+
+# Compile Vala to C
+!vc = |> ^ VALAC %f^ valac -C $(VALAPKGS) %f |> %B.c
+
+# Compile Vala to C and include all fast-vapi-dependencies in the directory
+!vcdeps = |> ^ VALAC %f^ valac -C $(VALAPKGS) `ls *.vala | grep -v %f | sed -r 's/^(.*)\.vala/--use-fast-vapi \1\.vapi/' | tr '\n' '\ '` %f |> %B.c
+
+# Generate fast-vapi for single vala file (depends on single vala-file)
+!vapi = |> ^ VAPI %f^ valac --fast-vapi=%B.vapi %f |> %B.vapi
+
+# Generate vapi and c-header file for library (depends only on fast-vapis!?)
+!vlib = |> ^ VALALIB %O^valac -CH %O.h $(VALAPKGS) --library %O `ls *.vala | sed -r 's/^(.*)\.vala/--use-fast-vapi \1\.vapi/' | tr '\n' '\ '` |>  | %O.h
+
+
+# Compile C to object
+!cc = |> ^ CC %f^ gcc -c %f -o %o $(CFLAGS) |> %B.o
+
+# Link together the executable
+!ld = |> ^ LINK %o^ gcc %f -o %o $(LDFLAGS) |> %B
+
+# Create a library (archive)
+!ar = |> ^ AR %o^ ar crs %o %f |>
