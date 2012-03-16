@@ -41,3 +41,6 @@ LDFLAGS += -lm
 
 # Create a library (archive)
 !ar = |> ^ AR %o^ ar crs %o %f |>
+
+# Create a symbolic link
+!ln = |> ^ LN %o -> %f^ ln -s %f %o |>
