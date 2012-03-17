@@ -3,41 +3,39 @@
 # Flags for libraries that will be needed when building the binary.
 # gobject-2.0 includes glib-2.0
 
-package = gobject-2.0
-VALAPKGS += --pkg $(package)
-CFLAGS += `pkg-config --cflags $(package)`
-LDFLAGS += `pkg-config --libs $(package)`
+PKGS += gobject-2.0 gee-1.0 gio-2.0
+VALAFLAGS += --thread
 
-package = gee-1.0
-VALAPKGS += --pkg $(package)
-CFLAGS += `pkg-config --cflags $(package)`
-LDFLAGS += `pkg-config --libs $(package)`
 
-package = gio-2.0
-VALAPKGS += --pkg $(package)
-CFLAGS += `pkg-config --cflags $(package)`
-LDFLAGS += `pkg-config --libs $(package)`
 
-LDFLAGS += -lm
+# Prefix each package in $(PKGS) with "--pkg="
+VALAFLAGS += `echo "$(PKGS)" | tr ' ' '\n' | sed -r 's/ /\n/;s/^(.*)$/--pkg=\1/;s/\n/ /' | tr '\n' ' '`
+# C compiler flags for packages
+CFLAGS += `pkg-config --cflags $(PKGS)`
+# linker flags for packags
+LDFLAGS += `pkg-config --libs $(PKGS)`
+
 
 # Compile Vala to C
-!vc = |> ^ VALAC %f^ valac -C $(VALAPKGS) %f |> %B.c
-
-# Compile Vala to C and include all fast-vapi-dependencies in the directory
-!vcdeps = |> ^ VALAC %f^ valac -C $(VALAPKGS) `ls *.vala | grep -v %f | sed -r 's/^(.*)\.vala/--use-fast-vapi \1\.vapi/' | tr '\n' '\ '` %f |> %B.c
+!vc = |> ^ VALAC %f^ valac -C $(VALAFLAGS) %f |> %B.c
 
 # Generate fast-vapi for single vala file (depends on single vala-file)
 !vapi = |> ^ VAPI %f^ valac --fast-vapi=%B.vapi %f |> %B.vapi
 
-# Generate vapi and c-header file for library (depends only on fast-vapis!?)
-!vlib = |> ^ VALALIB %O^valac -CH %O.h $(VALAPKGS) --library %O `ls *.vala | sed -r 's/^(.*)\.vala/--use-fast-vapi \1\.vapi/' | tr '\n' '\ '` |>  | %O.h
+# Generate a list of fast-vapis in the current directory
+!gen_fast_vapi_list = |> ^ VAPI-LIST^ echo %f > %o |> fast_vapi_list
 
+# Compile Vala to C and include all fast-vapi-dependencies in the directory
+!vcdeps = | fast_vapi_list |> ^ VALAC %f^ valac -C $(VALAFLAGS) `cat fast_vapi_list | tr ' ' '\n' | grep -v %B.vapi | sed -r 's/^(.*)$/--use-fast-vapi \1/' | tr '\n' '\ '` %f |> %B.c
+
+# Generate vapi and c-header file for library (depends only on fast-vapis!?)
+!vlib = | fast_vapi_list |> ^ VALALIB %O^valac -CH %O.h --library %O $(VALAFLAGS) `cat fast_vapi_list | tr ' ' '\n' | sed -r 's/^(.*)$/--use-fast-vapi \1/' | tr '\n' '\ '` |>  | %O.h
 
 # Compile C to object
 !cc = |> ^ CC %f^ gcc -c %f -o %o $(CFLAGS) |> %B.o
 
 # Link together the executable
-!ld = |> ^ LINK %o^ gcc %f -o %o $(LDFLAGS) |> %B
+!ld = |> ^ LINK %o^ gcc %f -o %o $(LDFLAGS) |>
 
 # Create a library (archive)
 !ar = |> ^ AR %o^ ar crs %o %f |>
