@@ -28,6 +28,14 @@ namespace Hasqap {
 			Permutation.identity (n);
 			this.shuffle ();
 		}
+		public Permutation.random_from_swaps (ref Swaps swaps) {
+			Permutation.identity (swaps.permutation_size);
+			swaps.shuffle();
+			foreach (var swap in swaps) {
+				this.swap (swap.a, swap.b);
+			}
+		}
+
 		public Permutation.unitialized () {
 		}
 		public new void set (int source, int target) {
@@ -59,10 +67,19 @@ namespace Hasqap {
 	 * permutation and shuffling them
 	 */
 	public class Swaps : OrderedSet<Swap> {
+		public int permutation_size;
+
 		public Swaps (int n) {
+			this.permutation_size = n;
 			for (var i = 0; i < n - 1; i++)
 				for (var j = i + 1; j < n; j++)
 					this.add(new Swap(i, j));
+		}
+		public bool has_swap (Swap swap) {
+			foreach (var s in this)
+				if (s.a == swap.a && s.b == swap.b)
+					return true;
+			return false;
 		}
 	}
 }

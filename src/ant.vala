@@ -79,7 +79,6 @@ namespace Hasqap {
 
 				foreach(var fixation in this.fixations.entries) {
 					ants[k].set(fixation.key, fixation.value);
-
 				}
 				ants[k].cost = compute_cost(ants[k]);
 			}
@@ -167,7 +166,7 @@ namespace Hasqap {
 					s = weighted_choice (r_pheromone, r_pheromone_sum);
 				}
 
-				if (this.fixations.has_key(r) || this.fixations.has_key(s)) {
+				if (!this.swaps.has_swap(new Swap(r, s))) {
 					//i--;
 					continue;
 				}
