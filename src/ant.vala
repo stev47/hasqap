@@ -196,7 +196,11 @@ namespace Hasqap {
 			for (var i = 0; i < p.size; i++) {
 				stdout.printf("%3d ", p[i]);
 			}
-			stdout.printf(" (%d)\n", p.cost);
+			int lincost = 0;
+			for (var i = 0; i < n; i++)
+				lincost += C[i,p[i]];
+
+			stdout.printf(" (%d) = (%d + %d)\n", p.cost, p.cost - lincost, lincost);
 		}
 
 		public void search (int? iterations = null) {
